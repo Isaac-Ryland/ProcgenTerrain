@@ -1,29 +1,40 @@
 using Godot;
 using System;
 
+[Tool]
 public partial class Terrain : MeshInstance3D
 {
 	
-	public int xSize = 20;
-	public int ySize = 20;
+	[Export] public int xSize = 20;
+	[Export] public int ySize = 20;
 	
-	void _Ready()
+	public PlaneMesh planeMesh;
+	
+	public override void _Ready()
 	{
-		Console.WriteLine("Test?");
+		GD.Print("HELLOOOOO"); // Debug print
+		
 		// This is where we will generate the initial mesh
-		Mesh.set_size(Vector2(10, 10));
+		
+		planeMesh = new PlaneMesh();
+		planeMesh.Size = new Vector2(xSize, ySize);
+		GD.Print(planeMesh.Size); // Debug print
+		GD.Print(planeMesh.CenterOffset); // Debug print
+		
+		Mesh = planeMesh;
 		
 		UpdateMesh();
 		
 	}
 	
-	void _process()
-	{
-		UpdateMesh(); // this is probably not what needs to be done here, a chunking system needs to be implemented
-	}
+	 public override void _Process(double delta)
+	 {
+	 	UpdateMesh(); // this is probably not what needs to be done here, a chunking system needs to be implemented
+	 }
 
 	void UpdateMesh() // Updates the mesh to redraw with any changes
 	{
+		// GD.Print("Updating!");
 		
 	}
 }
