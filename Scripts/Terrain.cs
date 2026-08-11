@@ -27,7 +27,7 @@ public partial class Terrain : MeshInstance3D
 		
 	}
 	
-	 public override void _Process(double delta)
+	 public override void _PhysicsProcess(double delta)
 	 {
 	 	UpdateMesh(); // this is probably not what needs to be done here, a chunking system needs to be implemented
 	 }
