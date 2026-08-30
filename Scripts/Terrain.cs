@@ -1,5 +1,7 @@
 using Godot;
 using System;
+// OUTDATED AND NO LONGER IN USE
+// This has only been left here for syntax reference
 
 [Tool]
 public partial class Terrain : MeshInstance3D
@@ -7,6 +9,7 @@ public partial class Terrain : MeshInstance3D
 	
 	[Export] public int xSize = 20;
 	[Export] public int ySize = 20;
+	
 	
 	public PlaneMesh planeMesh;
 	
@@ -32,7 +35,7 @@ public partial class Terrain : MeshInstance3D
 	 	UpdateMesh(); // this is probably not what needs to be done here, a chunking system needs to be implemented
 	 }
 
-	void UpdateMesh() // Updates the mesh to redraw with any changes
+	private void UpdateMesh() // Updates the mesh to redraw with any changes
 	{
 		// GD.Print("Updating!");
 		

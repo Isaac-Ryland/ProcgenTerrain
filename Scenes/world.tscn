@@ -1,15 +1,13 @@
 [gd_scene format=3 uid="uid://b8mtho6j16xy1"]
 
-[ext_resource type="Script" uid="uid://c6aqwn0khx8xb" path="res://Scripts/Terrain.cs" id="1_go701"]
+[ext_resource type="Script" uid="uid://dhfi4gi5ijnf8" path="res://Scripts/World.cs" id="1_go701"]
 [ext_resource type="Script" uid="uid://dk03y5uqecbju" path="res://Scripts/Camera3d.cs" id="2_5a7ea"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_go701"]
-size = Vector2(20, 20)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_go701"]
+albedo_color = Color(0, 0.627451, 1, 1)
+metallic_texture_channel = 1
 
 [node name="World" type="Node3D" unique_id=1642836408]
-
-[node name="Terrain" type="MeshInstance3D" parent="." unique_id=916692992]
-mesh = SubResource("PlaneMesh_go701")
 script = ExtResource("1_go701")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1862380579]
@@ -18,3 +16,6 @@ script = ExtResource("2_5a7ea")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=664357193]
 transform = Transform3D(1, 0, 0, 0, -0.9535015, 0.30138817, 0, -0.30138817, -0.9535015, 0, 4.281135, -4.882699)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=2059072587]
+material = SubResource("StandardMaterial3D_go701")
