@@ -3,8 +3,10 @@ using System;
 
 public partial class Camera3d : Camera3D
 {
+	public bool DebugToggle = false; // Toggle for Debug printouts
+	
 	[Export] public float MouseSensitivity = 0.01f; // Placeholder value for now
-	[Export] public float MoveSpeed = 5.0f; // Placeholder value for now
+	[Export] public float MoveSpeed = 15.0f; // Placeholder value for now
 	
 	private float _yaw = 0f;
 	private float _pitch = 0f;
@@ -58,7 +60,7 @@ public partial class Camera3d : Camera3D
 		if (Input.IsKeyPressed(Key.Space)) InputDir.Y += 1f;
 		if (Input.IsKeyPressed(Key.Ctrl)) InputDir.Y -= 1f;
 		
-		// Checks if camera is actually moving and normalizes our direction to prevent diagonals from moving faster
+		// Checks if camera is actually moving and normalizes the direction to prevent diagonals from moving faster
 		// Uses LengthSquared() here because it is more optimised than Length()
 		if (InputDir.LengthSquared() > 0f)
 			InputDir = InputDir.Normalized();
@@ -67,7 +69,7 @@ public partial class Camera3d : Camera3D
 		Vector3 Forward = Transform.Basis.Z;
 		Vector3 Right = Transform.Basis.X;
 		
-		// 
+		// Creates the horizontal movements seperately to avoid horizontal and vertical movement mixing
 		Vector3 horizontalMove = (Right * InputDir.X + Forward * (-InputDir.Z));
 		
 		// Get the overall direction 3D vector
@@ -75,5 +77,14 @@ public partial class Camera3d : Camera3D
 		
 		// Update the global position
 		GlobalPosition += MoveDir * MoveSpeed * (float)delta;
+		
+		// Debug Prints
+		if (DebugToggle) 
+		{
+			GD.Print("X Input: " + InputDir.X); 
+			GD.Print("Y Input: " + InputDir.Y); 
+			GD.Print("Z Input: " + InputDir.Z);
+			GD.Print("Global Position: " + GlobalPosition);
+		}
 	}
 }
