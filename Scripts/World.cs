@@ -6,7 +6,7 @@ using System.Collections.Generic;
 [Tool]
 public partial class World : Node3D
 {
-	public bool debugToggle = true;
+	public bool debugToggle = false;
 	
 	// Chunk Settings (These are passed down to each newly generated chunk)
 	[Export] public int chunkSize = 7; // The x and y size of an individual chunk
@@ -74,26 +74,18 @@ public partial class World : Node3D
 			}
 		}
 		
-		// Despawns chunks that aren't in range
+		// creates a list of all chunks that are no longer desired 
+		List<Vector2I> toRemove = new List<Vector2I>();
 		foreach (var (coord, chunk) in loadedChunks)
 		{
 			if (!desired.Contains(coord))
 			{
-				DespawnChunk(coord);
+				toRemove.Add(coord);
 			}
 		}
-		
-		
-//		List<Vector2I> toRemove = new List<Vector2I>(); // SAVE FOR WHEN DESPAWN CODE ABOVE BREAKS 
-//		foreach (var (coord, chunk) in loadedChunks)
-//		{
-//			if (!desired.Contains(coord))
-//			{
-//				ToRemove.Add(coord);
-//			}
-//		}
-//		foreach (Vector2I coord in toRemove)
-//			DespawnChunk(coord);
+		// removes all chunks that are no longer desired
+		foreach (Vector2I coord in toRemove)
+			DespawnChunk(coord);
 	}
 	
 	
@@ -109,7 +101,7 @@ public partial class World : Node3D
 		
 		AddChild(chunk);
 		
-		chunk.GlobalPosition = new Vector3(coord.X, 0, coord.Y); // DO NOT ACCOUNT FOR SIZE OF CHUNK YET, USED FOR FREE EVIDENCE OF TESTING
+		chunk.GlobalPosition = new Vector3(coord.X * chunkSize, 0, coord.Y * chunkSize);
 		
 		chunk.GenerateChunk();
 		

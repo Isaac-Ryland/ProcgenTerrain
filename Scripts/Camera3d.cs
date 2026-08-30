@@ -3,10 +3,11 @@ using System;
 
 public partial class Camera3d : Camera3D
 {
-	public bool DebugToggle = false; // Toggle for Debug printouts
+	public bool debugToggle = false; // Toggle for Debug printouts
 	
-	[Export] public float MouseSensitivity = 0.01f; // Placeholder value for now
-	[Export] public float MoveSpeed = 15.0f; // Placeholder value for now
+	[Export] public float mouseSensitivity = 0.01f;
+	[Export] public float moveSpeed = 15.0f;
+	[Export] public float sprintMultiplier = 5.0f;
 	
 	private float _yaw = 0f;
 	private float _pitch = 0f;
@@ -41,8 +42,8 @@ public partial class Camera3d : Camera3D
 		// Mouse look, only if the mouse is captured
 		if (@event is InputEventMouseMotion mouseMotion && Input.MouseMode == Input.MouseModeEnum.Captured)
 		{
-			_yaw -= mouseMotion.Relative.Y * MouseSensitivity;
-			_pitch -= mouseMotion.Relative.X * MouseSensitivity;
+			_yaw -= mouseMotion.Relative.Y * mouseSensitivity;
+			_pitch -= mouseMotion.Relative.X * mouseSensitivity;
 			
 			Rotation = new Vector3(_yaw, _pitch, _roll);
 		}
@@ -50,40 +51,43 @@ public partial class Camera3d : Camera3D
 	
 	public override void _PhysicsProcess(double delta)
 	{
-		Vector3 InputDir = Vector3.Zero;
+		Vector3 inputDir = Vector3.Zero;
 		
 		// Identifies what key has been pressed and applies relevant increments to a 3d vector that dictates the camera's direction
-		if (Input.IsKeyPressed(Key.W)) InputDir.Z += 1f;
-		if (Input.IsKeyPressed(Key.A)) InputDir.X -= 1f;
-		if (Input.IsKeyPressed(Key.S)) InputDir.Z -= 1f;
-		if (Input.IsKeyPressed(Key.D)) InputDir.X += 1f;
-		if (Input.IsKeyPressed(Key.Space)) InputDir.Y += 1f;
-		if (Input.IsKeyPressed(Key.Ctrl)) InputDir.Y -= 1f;
+		if (Input.IsKeyPressed(Key.W)) inputDir.Z += 1f;
+		if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1f;
+		if (Input.IsKeyPressed(Key.S)) inputDir.Z -= 1f;
+		if (Input.IsKeyPressed(Key.D)) inputDir.X += 1f;
+		if (Input.IsKeyPressed(Key.Space)) inputDir.Y += 1f;
+		if (Input.IsKeyPressed(Key.Ctrl)) inputDir.Y -= 1f;
 		
 		// Checks if camera is actually moving and normalizes the direction to prevent diagonals from moving faster
 		// Uses LengthSquared() here because it is more optimised than Length()
-		if (InputDir.LengthSquared() > 0f)
-			InputDir = InputDir.Normalized();
+		if (inputDir.LengthSquared() > 0f)
+			inputDir = inputDir.Normalized();
 		
 		// Gets the camera-relative direction for X & Z axis, used to make horizontal movements relative to the camera
-		Vector3 Forward = Transform.Basis.Z;
-		Vector3 Right = Transform.Basis.X;
+		Vector3 forward = Transform.Basis.Z;
+		Vector3 right = Transform.Basis.X;
 		
 		// Creates the horizontal movements seperately to avoid horizontal and vertical movement mixing
-		Vector3 horizontalMove = (Right * InputDir.X + Forward * (-InputDir.Z));
+		Vector3 horizontalMove = (right * inputDir.X + forward * (-inputDir.Z));
 		
 		// Get the overall direction 3D vector
-		Vector3 MoveDir = horizontalMove + Vector3.Up * InputDir.Y;
+		Vector3 moveDir = horizontalMove + Vector3.Up * inputDir.Y;
 		
 		// Update the global position
-		GlobalPosition += MoveDir * MoveSpeed * (float)delta;
+		float speed = moveSpeed;
+		if (Input.IsKeyPressed(Key.Shift))
+			speed *= sprintMultiplier;
+		GlobalPosition += moveDir * speed * (float)delta;
 		
 		// Debug Prints
-		if (DebugToggle) 
+		if (debugToggle) 
 		{
-			GD.Print("X Input: " + InputDir.X); 
-			GD.Print("Y Input: " + InputDir.Y); 
-			GD.Print("Z Input: " + InputDir.Z);
+			GD.Print("X Input: " + inputDir.X); 
+			GD.Print("Y Input: " + inputDir.Y); 
+			GD.Print("Z Input: " + inputDir.Z);
 			GD.Print("Global Position: " + GlobalPosition);
 		}
 	}

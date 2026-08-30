@@ -15,8 +15,8 @@ public partial class Chunk : MeshInstance3D
 	
 	public void GenerateChunk()
 	{
-		int verts = chunkResolution;
-		float step = chunkSize / chunkResolution;
+		int verts = chunkResolution + 1; // The additional +1 is for the boundary triangles
+		float step = (float)chunkSize / chunkResolution;
 		
 		SurfaceTool st = new SurfaceTool();
 		st.Begin(Mesh.PrimitiveType.Triangles);
@@ -47,17 +47,17 @@ public partial class Chunk : MeshInstance3D
 		}
 		
 		// Create 2 triangles for each grid square
-		for (int x = 0; x < chunkResolution - 1; x++)
+		for (int x = 0; x < chunkResolution; x++)
 		{
-			for (int z = 0; z < chunkResolution - 1; z++)
+			for (int z = 0; z < chunkResolution; z++)
 			{
 				Vector3 a = points[x, z];
 				Vector3 b = points[x + 1, z];
 				Vector3 c = points[x, z + 1];
 				Vector3 d = points[x + 1, z + 1];
  				
-				AddTriangle(st, a, c, b);
-				AddTriangle(st, b, c, d);
+				AddTriangle(st, a, b, c); // there was a winding order issue which meant the triangles were only visible from below
+				AddTriangle(st, b, d, c);
 			}
 		}
 		
