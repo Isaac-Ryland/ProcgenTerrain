@@ -51,13 +51,13 @@ public partial class Chunk : MeshInstance3D
 		{
 			for (int z = 0; z < chunkResolution; z++)
 			{
-				Vector3 a = points[x, z];
-				Vector3 b = points[x + 1, z];
-				Vector3 c = points[x, z + 1];
-				Vector3 d = points[x + 1, z + 1];
+				Vector3 topLeftVert = points[x, z];
+				Vector3 topRightVert = points[x + 1, z];
+				Vector3 bottomLeftVert = points[x, z + 1];
+				Vector3 bottomRightVert = points[x + 1, z + 1];
  				
-				AddTriangle(st, a, b, c); // there was a winding order issue which meant the triangles were only visible from below
-				AddTriangle(st, b, d, c);
+				AddTriangle(st, topLeftVert, topRightVert, bottomLeftVert); // there was a winding order issue which meant the triangles were only visible from below
+				AddTriangle(st, topRightVert, bottomRightVert, bottomLeftVert);
 			}
 		}
 		
