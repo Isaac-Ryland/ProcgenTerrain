@@ -10,8 +10,15 @@ public partial class Chunk : MeshInstance3D
 	// Placeholder chunk settings for intialization
 	public int chunkSize = 20; // The x and y size of an individual chunk
 	public int chunkResolution = 20; // The amount of subdivisions within one chunk
+	
 	public float noiseHeight = 1; // A multiplier for the noise to control how extreme the differences are between verts
 	public FastNoiseLite noise;
+	
+	public StandardMaterial3D terrainMaterial;
+	public float oceanTop = 0.30f;
+	public float beachTop = 0.34f;
+	public float grassTop = 0.60f;
+	public float rockTop = 0.85f;
 	
 	public void GenerateChunk()
 	{
@@ -56,7 +63,7 @@ public partial class Chunk : MeshInstance3D
 				Vector3 bottomLeftVert = points[x, z + 1];
 				Vector3 bottomRightVert = points[x + 1, z + 1];
  				
-				AddTriangle(st, topLeftVert, topRightVert, bottomLeftVert); // there was a winding order issue which meant the triangles were only visible from below
+				AddTriangle(st, topLeftVert, topRightVert, bottomLeftVert);
 				AddTriangle(st, topRightVert, bottomRightVert, bottomLeftVert);
 			}
 		}
@@ -65,16 +72,40 @@ public partial class Chunk : MeshInstance3D
 		st.Index();
 		
 		Mesh = st.Commit();
+		Mesh.SurfaceSetMaterial(0, terrainMaterial);
 	}
 	
-	private void AddTriangle(SurfaceTool st, Vector3 a, Vector3 b, Vector3 c)
+	private static readonly Color OceanColour = new Color(0.10f, 0.30f, 0.65f);
+	private static readonly Color BeachColour = new Color(0.90f, 0.85f, 0.55f);
+	private static readonly Color GrassColour = new Color(0.30f, 0.55f, 0.20f);
+	private static readonly Color RockColour = new Color(0.30f, 0.30f, 0.30f);
+	private static readonly Color SnowColour = new Color(1.0f, 1.0f, 1.0f);
+	
+	private Color GetTerrainColour(float height)
 	{
-		// Simple planar UVs based on local XZ position, scaled to 0-1 per chunk.
-		st.SetUV(new Vector2(a.X / chunkSize, a.Z / chunkSize));
-		st.AddVertex(a);
-		st.SetUV(new Vector2(b.X / chunkSize, b.Z / chunkSize));
-		st.AddVertex(b);
-		st.SetUV(new Vector2(c.X / chunkSize, c.Z / chunkSize));
-		st.AddVertex(c);
+		// heightFraction is in world units; normalize against the noiseHeight range
+		float heightFraction = Mathf.InverseLerp(-noiseHeight, noiseHeight, height);
+		
+		if (heightFraction < oceanTop) return OceanColour;
+		if (heightFraction < beachTop) return BeachColour;
+		if (heightFraction < grassTop) return GrassColour;
+		if (heightFraction < rockTop) return RockColour;
+		return SnowColour;
+	}
+	
+	
+	private void AddTriangle(SurfaceTool st, Vector3 vertA, Vector3 vertB, Vector3 vertC)
+	{
+		st.SetColor(GetTerrainColour(vertA.Y));
+		st.SetUV(new Vector2(vertA.X / chunkSize, vertA.Z / chunkSize));
+		st.AddVertex(vertA);
+		
+		st.SetColor(GetTerrainColour(vertB.Y));
+		st.SetUV(new Vector2(vertB.X / chunkSize, vertB.Z / chunkSize));
+		st.AddVertex(vertB);
+		
+		st.SetColor(GetTerrainColour(vertC.Y));
+		st.SetUV(new Vector2(vertC.X / chunkSize, vertC.Z / chunkSize));
+		st.AddVertex(vertC);
 	}
 }

@@ -39,6 +39,15 @@ public partial class Camera3d : Camera3D
 			}
 		}
 		
+		// Click on window to recapture mouse
+		if (@event is InputEventMouseButton mouseButton && mouseButton.Pressed)
+		{
+			if (Input.MouseMode == Input.MouseModeEnum.Visible)
+			{
+				Input.MouseMode = Input.MouseModeEnum.Captured;
+			}
+		}
+		
 		// Mouse look, only if the mouse is captured
 		if (@event is InputEventMouseMotion mouseMotion && Input.MouseMode == Input.MouseModeEnum.Captured)
 		{

@@ -11,25 +11,37 @@ public partial class World : Node3D
 	// Chunk Settings (These are passed down to each newly generated chunk)
 	[Export] public int chunkSize = 7; // The x and y size of an individual chunk
 	[Export] public int chunkResolution = 20; // The amount of subdivisions within one chunk
-	[Export] public int chunkRenderDistance = 20; // The distance from the camera (in chunks) where chunks will render
+	[Export] public int chunkRenderDistance = 25; // The distance from the camera (in chunks) where chunks will render
 	
 	// Noise Settings
-	[Export] public float noiseFrequency = 0.005f; // Controls how smooth/granular the noise is
-	[Export] public int noiseHeight = 75; // A multiplier for the noise to control how extreme the differences are between verts
+	[Export] public float noiseFrequency = 0.004f; // Controls how smooth/granular the noise is
+	[Export] public int noiseHeight = 80; // A multiplier for the noise to control how extreme the differences are between verts
 	[Export] public int noiseSeed = 1; // Temporary seed, will be available to choose by user eventually
 	
 	private FastNoiseLite noise; // A shared noise generator so all chunks sample from the same noise
+	
+	// Colour band thresholds, as fractions of noiseHeight (0 = lowest possible point, 1 = highest)
+	[Export] public float oceanTop = 0.30f;
+	[Export] public float beachTop = 0.35f;
+	[Export] public float grassTop = 0.60f;
+	[Export] public float rockTop = 0.80f;
+	// Anything above rockTop is snow
 	
 	// Tracks currently loaded chunks by their integer chunk coordinate.
 	private Dictionary<Vector2I, Chunk> loadedChunks = new Dictionary<Vector2I, Chunk>();
 	
 	private Camera3D viewer;
 	
+	private StandardMaterial3D terrainMaterial;
+	
 	public override void _Ready()
 	{
 		noise = new FastNoiseLite();
 		noise.Seed = noiseSeed;
 		noise.Frequency = noiseFrequency;
+		
+		terrainMaterial = new StandardMaterial3D();
+		terrainMaterial.VertexColorUseAsAlbedo = true;
 		
 		Camera3D viewer = GetViewport()?.GetCamera3D();
 		
@@ -39,6 +51,10 @@ public partial class World : Node3D
 	
 	public override void _PhysicsProcess(double delta)
 	{
+		// Updates Seed and Frequency so noise can be tweaked without a rebuild
+		noise.Seed = noiseSeed;
+		noise.Frequency = noiseFrequency;
+		
 		UpdateChunks();
 	}
 	
@@ -102,6 +118,11 @@ public partial class World : Node3D
 		chunk.chunkResolution = chunkResolution;
 		chunk.noiseHeight = noiseHeight;
 		chunk.noise = noise;
+		chunk.terrainMaterial = terrainMaterial;
+		chunk.oceanTop = oceanTop;
+		chunk.beachTop = beachTop;
+		chunk.grassTop = grassTop;
+		chunk.rockTop = rockTop;
 		
 		AddChild(chunk);
 		
