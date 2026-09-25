@@ -12,6 +12,7 @@ public partial class World : Node3D
 	[Export] public int chunkSize = 7; // The x and y size of an individual chunk
 	[Export] public int chunkResolution = 20; // The amount of subdivisions within one chunk
 	[Export] public int chunkRenderDistance = 25; // The distance from the camera (in chunks) where chunks will render
+	[Export] public int chunksPerFrame = 15; // The maximum amount of chunks being spawned per frame
 	
 	// Noise Settings
 	[Export] public float noiseFrequency = 0.004f; // Controls how smooth/granular the noise is
@@ -30,6 +31,10 @@ public partial class World : Node3D
 	// Tracks currently loaded chunks by their integer chunk coordinate.
 	private Dictionary<Vector2I, Chunk> loadedChunks = new Dictionary<Vector2I, Chunk>();
 	
+	private Queue<Vector2I> spawnQueue = new Queue<Vector2I>(); // It refusing to colour 'Queue' is irritating me :/
+	private HashSet<Vector2I> queuedCoords = new HashSet<Vector2I>(); 
+	// Using a HashSet to allow for fast lookups as it is an 0(1) search instead of an O(n) search
+	
 	private Camera3D viewer;
 	
 	private StandardMaterial3D terrainMaterial;
@@ -43,9 +48,10 @@ public partial class World : Node3D
 		terrainMaterial = new StandardMaterial3D();
 		terrainMaterial.VertexColorUseAsAlbedo = true;
 		
-		Camera3D viewer = GetViewport()?.GetCamera3D();
+		viewer = GetViewport()?.GetCamera3D();
 		
-		UpdateChunks();
+		UpdateDesiredChunks();
+		ProcessSpawnQueue();
 	}
 	
 	
@@ -55,12 +61,13 @@ public partial class World : Node3D
 		noise.Seed = noiseSeed;
 		noise.Frequency = noiseFrequency;
 		
-		UpdateChunks();
+		UpdateDesiredChunks();
+		ProcessSpawnQueue();
 	}
 	
 	
 	// Finds which chunk the viewer is in, and uses that to load and unload chunks based on chunkRenderDistance
-	private void UpdateChunks()
+	private void UpdateDesiredChunks()
 	{
 		Node3D viewer = GetViewer();
 		if (viewer == null) // If the camera cannot be found, this prevents chunks attempting to render around a point that doesn't exist
@@ -77,35 +84,65 @@ public partial class World : Node3D
 		
 		// Creates a list of all the chunks that SHOULD be generated this frame, 
 		// and if one should be generated and is not, then it is generated
-		List<Vector2I> desired = new List<Vector2I>();
+		HashSet<Vector2I> chunksInRange = new HashSet<Vector2I>();
+		int renderDistanceSquared = chunkRenderDistance * chunkRenderDistance;
+		
 		for (int x = -chunkRenderDistance; x <= chunkRenderDistance; x++)
 		{
 			for (int z = -chunkRenderDistance; z <= chunkRenderDistance; z++)
 			{
+				// If the point is outside the circular render distance, skip it
+				int distanceSquared = x * x + z * z;
+				if (distanceSquared > renderDistanceSquared)
+				{
+					continue; 
+				}
+				
 				Vector2I coord = new Vector2I(centerChunk.X + x, centerChunk.Y + z);
 				
-				desired.Add(coord);
+				chunksInRange.Add(coord);
 				
 				// checks if the chunk at coord is generated, and if not then generates it
-				if (!loadedChunks.ContainsKey(coord))
+				if (!loadedChunks.ContainsKey(coord) && !queuedCoords.Contains(coord))
 				{
-					SpawnChunk(coord);
+					queuedCoords.Add(coord); // A HashSet of all the chunks that need to be generated. 
+					// This HashSet is being used instead of checking spawnQueue as lookups in a Queue are expensive
+					spawnQueue.Enqueue(coord); // An ordered queue of the chunks that need to be spawned
 				}
 			}
 		}
 		
-		// creates a list of all chunks that are no longer desired 
+		// creates a list of all chunks that are no longer in range 
 		List<Vector2I> toRemove = new List<Vector2I>();
 		foreach (var (coord, chunk) in loadedChunks)
 		{
-			if (!desired.Contains(coord))
+			if (!chunksInRange.Contains(coord))
 			{
 				toRemove.Add(coord);
 			}
 		}
-		// removes all chunks that are no longer desired
+		// removes all chunks that are no longer in range
 		foreach (Vector2I coord in toRemove)
+		{
 			DespawnChunk(coord);
+		}
+	}
+	
+	
+	private void ProcessSpawnQueue()
+	{
+		int spawnedThisFrame = 0;
+		while (spawnedThisFrame < chunksPerFrame && spawnQueue.Count > 0)
+		{
+			Vector2I coord = spawnQueue.Dequeue();
+			queuedCoords.Remove(coord);
+			
+			if (!loadedChunks.ContainsKey(coord))
+			{
+				SpawnChunk(coord);
+				spawnedThisFrame++;
+			}
+		}
 	}
 	
 	
